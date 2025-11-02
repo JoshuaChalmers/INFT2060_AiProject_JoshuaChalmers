@@ -1,6 +1,6 @@
-## CLIP Test #3 - open-clip
+## Healthcare CLIP Test #1 - open-clip
 ## Run from INFT2060_AiProject_JoshuaChalmers
-## Dataset 1000 images - Fashion Product Images (Small) https://www.kaggle.com/datasets/paramaggarwal/fashion-product-images-small
+## Dataset 400 images - Chest X-Ray Images (Pneumonia) https://www.kaggle.com/datasets/paultimothymooney/chest-xray-pneumonia/data
 
 from pathlib import Path
 import os
@@ -13,26 +13,25 @@ from tqdm import tqdm
 import open_clip
 
 # Config
-dataSize = 1000
+dataSize = 400
 modelName = "ViT-B-32"
 preTrained = "laion2b_s34b_b79k"
 device = "cpu" # AMD Card
 seed = 42
 
-csvPath = Path(__file__).resolve().parent / "ecommerce" / "products-3.csv"
+csvPath = Path(__file__).resolve().parent / "healthcare" / "records-1.csv"
 
 # Manually setting seed so if the test is re run, we get the same results for consistency
 def setSeed(seedVal: int):
     torch.manual_seed(seedVal)
     np.random.seed(seedVal)
 
-# Load csv data
 def loadData(csvFile: Path, n: int) -> pd.DataFrame:
     df = pd.read_csv(csvFile, dtype=str).fillna("")
     df["exists"] = df["imagePath"].apply(lambda p: os.path.isfile(p))
     df = df[df["exists"]].drop(columns=["exists"]).reset_index(drop=True)
     if len(df) == 0:
-        raise SystemExit("Check imagePath values in products-3.csv")
+        raise SystemExit("Check imagePath values in records-1.csv")
     if len(df) > n:
         df = df.sample(n, random_state=seed).reset_index(drop=True)
     return df
@@ -57,23 +56,26 @@ def topKAccuracy(simMat: torch.Tensor, k: int = 1) -> float:
     topk = simMat.topk(k, dim=1).indices
     gt = torch.arange(simMat.size(0), device=simMat.device).unsqueeze(1)
     correct = (topk == gt).any(dim=1).float().mean().item()
-    return correct# Helper funtion to hopefully fix concatenation issues with test #2
-def createText(titles: pd.Series, captions: pd.Series) -> list[str]:
+    return correct
+
+# Helper funtion connect all text fields (title caption labels)
+def createText(titles: pd.Series, captions: pd.Series, labels: pd.Series) -> list[str]:
     textList = []
-    for title, caption in zip(titles.fillna(""), captions.fillna("")):
+    for title, caption, label in zip(titles.fillna(""), captions.fillna(""), labels.fillna("")):
         t = title.strip()
         c = caption.strip()
-        if t and c:
-            textList.append(f"{t}, featuring {c}.")
+        l = label.strip()
+        if t and c and l:
+            textList.append(f"{t}, showing {c} {l}.")
         elif t:
             textList.append(t)
         elif c:
             textList.append(c)
+        elif l:
+            textList.append(l)
         else:
-            textList.append("fashion product")
+            textList.append("medical image")
     return textList
-
-
 
 # Main CLIP function
 def main():
@@ -101,8 +103,8 @@ def main():
     del imageBatch
 
     # Encoding text
-    print("Encoding text (title & caption)...")
-    text = createText(df.get("title", ""), df.get("caption", ""))
+    print("Encoding text (title & caption & labels)...")
+    text = createText(df.get("title", ""), df.get("caption", ""), df.get("labels", ""))
     with torch.no_grad():
         textTokens = tokenizer(text).to(device)
         textEmb = model.encode_text(textTokens).float()
