@@ -1,6 +1,6 @@
 ## CLIP Test #3 - open-clip
 ## Run from INFT2060_AiProject_JoshuaChalmers
-## Dataset 200 images - Fashion Product Images (Small) https://www.kaggle.com/datasets/paramaggarwal/fashion-product-images-small
+## Dataset 1000 images - Fashion Product Images (Small) https://www.kaggle.com/datasets/paramaggarwal/fashion-product-images-small
 
 from pathlib import Path
 import os
@@ -13,13 +13,13 @@ from tqdm import tqdm
 import open_clip
 
 # Config
-dataSize = 200
+dataSize = 1000
 modelName = "ViT-B-32"
 preTrained = "laion2b_s34b_b79k"
 device = "cpu" # AMD Card
 seed = 42
 
-csvPath = Path(__file__).resolve().parent / "ecommerce" / "products-2.csv"
+csvPath = Path(__file__).resolve().parent / "ecommerce" / "products-3.csv"
 
 # Manually setting seed so if the test is re run, we get the same results for consistency
 def setSeed(seedVal: int):
@@ -32,7 +32,7 @@ def loadData(csvFile: Path, n: int) -> pd.DataFrame:
     df["exists"] = df["imagePath"].apply(lambda p: os.path.isfile(p))
     df = df[df["exists"]].drop(columns=["exists"]).reset_index(drop=True)
     if len(df) == 0:
-        raise SystemExit("Check imagePath values in products-2.csv")
+        raise SystemExit("Check imagePath values in products-3.csv")
     if len(df) > n:
         df = df.sample(n, random_state=seed).reset_index(drop=True)
     return df
@@ -58,6 +58,22 @@ def topKAccuracy(simMat: torch.Tensor, k: int = 1) -> float:
     gt = torch.arange(simMat.size(0), device=simMat.device).unsqueeze(1)
     correct = (topk == gt).any(dim=1).float().mean().item()
     return correct
+
+# Helper funtion to hopefully fix concatenation issues with test #2
+def createText(titles: pd.Series, captions: pd.Series) -> list[str]:
+    textList = []
+    for title, caption in zip(titles.fillna(""), captions.fillna("")):
+        t = title.strip()
+        c = caption.strip()
+        if t and c:
+            textList.append(f"{t}, featuring {c}.")
+        elif t:
+            textList.append(t)
+        elif c:
+            textList.append(c)
+        else:
+            textList.append("fashion product")
+    return textList
 
 # Main CLIP function
 def main():
@@ -86,7 +102,7 @@ def main():
 
     # Encoding text
     print("Encoding text (title & caption)...")
-    text = (df["title"].fillna("") + ". " + df["caption"].fillna("")).str.strip().tolist()
+    text = createText(df.get("title", ""), df.get("caption", ""))
     with torch.no_grad():
         textTokens = tokenizer(text).to(device)
         textEmb = model.encode_text(textTokens).float()

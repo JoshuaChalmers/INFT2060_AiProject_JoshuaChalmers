@@ -5,8 +5,8 @@ import pandas as pd
 import os
 
 inputCSV = "../ecommerce/styles.csv"
-outputCSV = "../ecommerce/products-2.csv"
-totalRows = 200 # Second iteration of CLIP training to use 200 images
+outputCSV = "../ecommerce/products-3.csv"
+totalRows = 1000 # Third iteration of CLIP training to use 1000 images
 imageFolder = r"D:/Code/INFT2060_AiProject_JoshuaChalmers/ecommerce/images"
 imageFormat = ".jpg"
 
