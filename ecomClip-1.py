@@ -13,13 +13,13 @@ from tqdm import tqdm
 import open_clip
 
 # Config
-dataSize = 100
+dataSize = 1000
 modelName = "ViT-B-32"
 preTrained = "laion2b_s34b_b79k"
 device = "cpu" # AMD Card
 seed = 42
 
-csvPath = Path(__file__).resolve().parent / "ecommerce" / "products.csv"
+csvPath = Path(__file__).resolve().parent / "ecommerce" / "products-1.csv"
 
 # Manually setting seed so if the test is re run, we get the same results for consistency
 def setSeed(seedVal: int):
