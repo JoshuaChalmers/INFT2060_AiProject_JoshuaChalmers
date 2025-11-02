@@ -57,9 +57,7 @@ def topKAccuracy(simMat: torch.Tensor, k: int = 1) -> float:
     topk = simMat.topk(k, dim=1).indices
     gt = torch.arange(simMat.size(0), device=simMat.device).unsqueeze(1)
     correct = (topk == gt).any(dim=1).float().mean().item()
-    return correct
-
-# Helper funtion to hopefully fix concatenation issues with test #2
+    return correct# Helper funtion to hopefully fix concatenation issues with test #2
 def createText(titles: pd.Series, captions: pd.Series) -> list[str]:
     textList = []
     for title, caption in zip(titles.fillna(""), captions.fillna("")):
@@ -74,6 +72,8 @@ def createText(titles: pd.Series, captions: pd.Series) -> list[str]:
         else:
             textList.append("fashion product")
     return textList
+
+
 
 # Main CLIP function
 def main():
