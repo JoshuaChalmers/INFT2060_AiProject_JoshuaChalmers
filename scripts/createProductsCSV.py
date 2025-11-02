@@ -5,8 +5,8 @@ import pandas as pd
 import os
 
 inputCSV = "../ecommerce/styles.csv"
-outputCSV = "../ecommerce/products-3.csv"
-totalRows = 1000 # Third iteration of CLIP training to use 1000 images
+outputCSV = "../ecommerce/products-4.csv"
+totalRows = 1000 # Fourth iteration of CLIP training to use 1000 images
 imageFolder = r"D:/Code/INFT2060_AiProject_JoshuaChalmers/ecommerce/images"
 imageFormat = ".jpg"
 
@@ -49,6 +49,23 @@ def addCaption(row: pd.Series) -> str:
     parts = [p.strip() for p in parts if p and str(p).strip()]
     return ", ".join(parts) or addTitle(row)
 
+# labels column
+def addLabels(row: pd.Series) -> str:
+    parts = []
+    if row["articleType"]:
+        parts.append(f"ArticleType: {row['articleType']}")
+    if row["baseColour"]:
+        parts.append(f"Colour: {row['baseColour']}")
+    if row["gender"]:
+        parts.append(f"Gender: {row['gender']}")
+    if row["season"]:
+        parts.append(f"Season: {row['season']}")
+    if row["usage"]:
+        parts.append(f"Usage: {row['usage']}")
+    if row["year"]:
+        parts.append(f"Year: {row['year']}")
+    return "; ".join(parts) if parts else "No Label"
+
 # Check for file (stops errors if image doesnt exist once loaded)
 def fileExists(path: str) -> bool:
     try:
@@ -77,6 +94,7 @@ out = pd.DataFrame({
     "imagePath": work["imagePath"],
     "title": work.apply(addTitle, axis=1),
     "caption": work.apply(addCaption, axis=1),
+    "labels": work.apply(addLabels, axis=1),
 })
 
 out.to_csv(outputCSV, index=False, encoding="utf-8")
