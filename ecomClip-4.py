@@ -1,4 +1,4 @@
-## CLIP Test #4 - open-clip
+## CLIP Test #4.5 - open-clip
 ## Run from INFT2060_AiProject_JoshuaChalmers
 ## Dataset 1000 images - Fashion Product Images (Small) https://www.kaggle.com/datasets/paramaggarwal/fashion-product-images-small
 
@@ -19,7 +19,7 @@ preTrained = "laion2b_s34b_b79k"
 device = "cpu" # AMD Card
 seed = 42
 
-csvPath = Path(__file__).resolve().parent / "ecommerce" / "products-4.csv"
+csvPath = Path(__file__).resolve().parent / "ecommerce" / "products-5.csv"
 
 # Manually setting seed so if the test is re run, we get the same results for consistency
 def setSeed(seedVal: int):
@@ -32,7 +32,7 @@ def loadData(csvFile: Path, n: int) -> pd.DataFrame:
     df["exists"] = df["imagePath"].apply(lambda p: os.path.isfile(p))
     df = df[df["exists"]].drop(columns=["exists"]).reset_index(drop=True)
     if len(df) == 0:
-        raise SystemExit("Check imagePath values in products-4.csv")
+        raise SystemExit("Check imagePath values in products-5.csv")
     if len(df) > n:
         df = df.sample(n, random_state=seed).reset_index(drop=True)
     return df

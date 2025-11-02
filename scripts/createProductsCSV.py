@@ -5,8 +5,8 @@ import pandas as pd
 import os
 
 inputCSV = "../ecommerce/styles.csv"
-outputCSV = "../ecommerce/products-4.csv"
-totalRows = 1000 # Fourth iteration of CLIP training to use 1000 images
+outputCSV = "../ecommerce/products-5.csv"
+totalRows = 1000 # Fifth iteration of CLIP training to use 1000 images
 imageFolder = r"D:/Code/INFT2060_AiProject_JoshuaChalmers/ecommerce/images"
 imageFormat = ".jpg"
 
@@ -36,34 +36,52 @@ def addImagePath(idStr: str) -> str:
 def addTitle(row: pd.Series) -> str:
     return row["productDisplayName"] or "Untitled Product"
 
-# caption column
+# caption column (updated to be less word vomit and form a more natural sentence prompt)
 def addCaption(row: pd.Series) -> str:
-    parts = [
-        row["baseColour"],
-        row["articleType"],
-        f"for {row['gender']}" if row["gender"] else "",
-        row["usage"],
-        row["season"],
-        str(row["year"]) if row["year"] else "",
-    ]
-    parts = [p.strip() for p in parts if p and str(p).strip()]
-    return ", ".join(parts) or addTitle(row)
+    colour = (row["baseColour"] or "").strip().lower()
+    articleType = (row["articleType"] or "").strip().lower()
+    gender = (row["gender"] or "").strip().lower()
+    usage = (row["usage"] or "").strip().lower()
+    season = (row["season"] or "").strip().lower()
+    year = (row["year"] or "").strip().lower()
 
-# labels column
+    start = ""
+    if colour and articleType:
+        start = f"a {colour} {articleType}"
+    elif articleType:
+        start = f"a {articleType}"
+    elif colour:
+        start = f"a {colour}"
+
+    end = []
+    if gender:
+        end.append(gender)
+    if usage:
+        end.append(usage)
+    customer = f" for {' '.join(end)}" if end else ""
+
+    when = f" ({season} {year})".strip() if (season or year) else ""
+    sentence = (start + customer + when).strip()
+    if sentence and not sentence.endswith("."):
+        sentence += "."
+
+    return sentence or addTitle(row)
+
+# labels column (minor update to be a bit more readable prompt)
 def addLabels(row: pd.Series) -> str:
     parts = []
     if row["articleType"]:
-        parts.append(f"ArticleType: {row['articleType']}")
+        parts.append(f"ArticleType={row['articleType']}")
     if row["baseColour"]:
-        parts.append(f"Colour: {row['baseColour']}")
+        parts.append(f"Colour={row['baseColour']}")
     if row["gender"]:
-        parts.append(f"Gender: {row['gender']}")
+        parts.append(f"Gender={row['gender']}")
     if row["season"]:
-        parts.append(f"Season: {row['season']}")
+        parts.append(f"Season={row['season']}")
     if row["usage"]:
-        parts.append(f"Usage: {row['usage']}")
+        parts.append(f"Usage={row['usage']}")
     if row["year"]:
-        parts.append(f"Year: {row['year']}")
+        parts.append(f"Year={row['year']}")
     return "; ".join(parts) if parts else "No Label"
 
 # Check for file (stops errors if image doesnt exist once loaded)
