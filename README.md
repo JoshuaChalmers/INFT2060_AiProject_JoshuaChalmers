@@ -22,4 +22,5 @@
 #### Verify
 `python -c "import torch, pandas; print(torch.__version__, pandas.__version__)`
 
-#### Make sure to point IDE at clipenv Python: Select Interpreter
+#### Make sure to point IDE at clipenv 
+`Python: Select Interpreter`
